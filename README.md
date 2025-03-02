@@ -18,3 +18,5 @@ Think you can dominate poker and ace your homework? Think again. The AI enforces
 
 ### 🏆 **Why This Project?**  
 Because life is all about making trade-offs. You can’t always win. But you can sure try.  
+
+## [Watch Our Demo] (https://youtu.be/JVtFxCJw5ng)
