@@ -11,7 +11,7 @@ Enter **"Poker, I Hardly Know Her"**, the ultimate hack for high-stakes multitas
 
 And while you're making those high-stakes calls, the glasses also scan your homework and attempt to solve it in real-time.
 
-### Unfortunately You Can’t Win Everything.**  
+### Unfortunately You Can’t Win Everything.  
 Think you can dominate poker and ace your homework? Think again. The AI enforces *balance*:  
 - **The better you do in poker, the worse your homework accuracy gets.**  
 - **Can you strategize when to sacrifice knowledge for luck?**  
