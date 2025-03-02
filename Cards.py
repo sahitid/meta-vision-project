@@ -29,8 +29,9 @@ RANK_HEIGHT = 125
 SUIT_WIDTH = 70
 SUIT_HEIGHT = 100
 
-RANK_DIFF_MAX = 2000
-SUIT_DIFF_MAX = 700
+RANK_DIFF_MAX = 2500  # was 2000
+SUIT_DIFF_MAX = 1000  # was 700
+
 
 CARD_MAX_AREA = 120000
 CARD_MIN_AREA = 25000
@@ -105,25 +106,18 @@ def load_suits(filepath):
 
 def preprocess_image(image):
     """Returns a grayed, blurred, and adaptively thresholded camera image."""
-
-    gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray,(5,5),0)
-
-    # The best threshold level depends on the ambient lighting conditions.
-    # For bright lighting, a high threshold must be used to isolate the cards
-    # from the background. For dim lighting, a low threshold must be used.
-    # To make the card detector independent of lighting conditions, the
-    # following adaptive threshold method is used.
-    #
-    # A background pixel in the center top of the image is sampled to determine
-    # its intensity. The adaptive threshold is set at 50 (THRESH_ADDER) higher
-    # than that. This allows the threshold to adapt to the lighting conditions.
-    img_w, img_h = np.shape(image)[:2]
-    bkg_level = gray[int(img_h/100)][int(img_w/2)]
-    thresh_level = bkg_level + BKG_THRESH
-
-    retval, thresh = cv2.threshold(blur,thresh_level,255,cv2.THRESH_BINARY)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (5,5), 0)
     
+    # Use adaptive thresholding if the image is very bright.
+    if np.mean(gray) > 180:
+        thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+                                       cv2.THRESH_BINARY_INV, 11, 5)
+    else:
+        img_w, img_h = np.shape(image)[:2]
+        bkg_level = gray[int(img_h/100)][int(img_w/2)]
+        thresh_level = bkg_level + BKG_THRESH
+        retval, thresh = cv2.threshold(blur, thresh_level, 255, cv2.THRESH_BINARY)
     return thresh
 
 def find_cards(thresh_image):
@@ -132,7 +126,8 @@ def find_cards(thresh_image):
     from largest to smallest."""
 
     # Find contours and sort their indices by contour size
-    dummy,cnts,hier = cv2.findContours(thresh_image,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hier = cv2.findContours(thresh_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
     index_sort = sorted(range(len(cnts)), key=lambda i : cv2.contourArea(cnts[i]),reverse=True)
 
     # If there are no contours, do nothing
@@ -199,20 +194,24 @@ def preprocess_card(contour, image):
     # Grab corner of warped card image and do a 4x zoom
     Qcorner = qCard.warp[0:CORNER_HEIGHT, 0:CORNER_WIDTH]
     Qcorner_zoom = cv2.resize(Qcorner, (0,0), fx=4, fy=4)
-
-    # Sample known white pixel intensity to determine good threshold level
-    white_level = Qcorner_zoom[15,int((CORNER_WIDTH*4)/2)]
-    thresh_level = white_level - CARD_THRESH
-    if (thresh_level <= 0):
-        thresh_level = 1
-    retval, query_thresh = cv2.threshold(Qcorner_zoom, thresh_level, 255, cv2. THRESH_BINARY_INV)
+    
+    # Adjust thresholding for light backgrounds by checking the sampled white pixel.
+    white_level = Qcorner_zoom[15, int((CORNER_WIDTH*4)/2)]
+    if white_level > 200:
+        query_thresh = cv2.adaptiveThreshold(Qcorner_zoom, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+                                             cv2.THRESH_BINARY_INV, 11, 5)
+    else:
+        thresh_level = white_level - CARD_THRESH
+        if thresh_level <= 0:
+            thresh_level = 1
+        retval, query_thresh = cv2.threshold(Qcorner_zoom, thresh_level, 255, cv2.THRESH_BINARY_INV)
     
     # Split in to top and bottom half (top shows rank, bottom shows suit)
     Qrank = query_thresh[20:185, 0:128]
     Qsuit = query_thresh[186:336, 0:128]
 
     # Find rank contour and bounding rectangle, isolate and find largest contour
-    dummy, Qrank_cnts, hier = cv2.findContours(Qrank, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    Qrank_cnts, hier = cv2.findContours(Qrank, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     Qrank_cnts = sorted(Qrank_cnts, key=cv2.contourArea,reverse=True)
 
     # Find bounding rectangle for largest contour, use it to resize query rank
@@ -224,7 +223,7 @@ def preprocess_card(contour, image):
         qCard.rank_img = Qrank_sized
 
     # Find suit contour and bounding rectangle, isolate and find largest contour
-    dummy, Qsuit_cnts, hier = cv2.findContours(Qsuit, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    Qsuit_cnts, hier = cv2.findContours(Qsuit, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     Qsuit_cnts = sorted(Qsuit_cnts, key=cv2.contourArea,reverse=True)
     
     # Find bounding rectangle for largest contour, use it to resize query suit
