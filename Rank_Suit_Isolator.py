@@ -1,6 +1,4 @@
-### Takes a card picture and creates a top-down 200x300 flattened image
-### of it. Isolates the suit and rank and saves the isolated images.
-### Runs through A - K ranks and then the 4 suits.
+
 
 # Import necessary packages
 import cv2
