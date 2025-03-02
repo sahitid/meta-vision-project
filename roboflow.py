@@ -13,6 +13,9 @@ def main():
         print("Cannot open webcam")
         return
 
+    # Increase FPS setting to 60
+    cap.set(cv2.CAP_PROP_FPS, 60)
+    
     # Retrieve and print FPS
     fps = cap.get(cv2.CAP_PROP_FPS)
     print(f"Current FPS: {fps}")
@@ -27,7 +30,7 @@ def main():
         temp_file = "temp.jpg"
         cv2.imwrite(temp_file, frame)
 
-        # Run inference on the saved frame
+        # Run inference on the saved frame using first model: cards-and-such/1
         result = CLIENT.infer(temp_file, model_id="cards-and-such/1")
         
         # Process results assuming result contains a 'predictions' list with x, y, width, height keys
@@ -45,7 +48,25 @@ def main():
                 label = pred.get("class", "card")
                 cv2.putText(frame, label, (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
         else:
-            print("No predictions found in result.")
+            print("No predictions found in result for cards-and-such/1.")
+
+        # Run inference on the saved frame using second model: attempt/1
+        result_attempt = CLIENT.infer(temp_file, model_id="attempt/1")
+        if "predictions" in result_attempt:
+            for pred in result_attempt["predictions"]:
+                x_center = pred.get("x", 0)
+                y_center = pred.get("y", 0)
+                width = pred.get("width", 0)
+                height = pred.get("height", 0)
+                x1 = int(x_center - width/2)
+                y1 = int(y_center - height/2)
+                x2 = int(x_center + width/2)
+                y2 = int(y_center + height/2)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)  # red rectangle for attempt model
+                label = pred.get("class", "card")
+                cv2.putText(frame, label, (x1, y2+20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 2)
+        else:
+            print("No predictions found in result for attempt/1.")
 
         cv2.imshow("Detections", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
