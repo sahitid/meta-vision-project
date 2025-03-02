@@ -4,13 +4,13 @@ import os
 from openai import OpenAI
 from elevenlabs.client import ElevenLabs
 from elevenlabs import play
+from treys import Card, Evaluator
 
 # Load API keys from .env file
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
 
-probability = 1  # Probability of intentionally providing a wrong answer
 
 def get_homework_answer(image_url):
     """
