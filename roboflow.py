@@ -7,7 +7,7 @@ from inference_sdk import InferenceHTTPClient
 # Initialize Roboflow Inference Client
 CLIENT = InferenceHTTPClient(
     api_url="https://detect.roboflow.com",
-    api_key="dURBe8GZBlZx9N1HohRr"
+    api_key="UUt2G4WbQOcz7amtOeUF"
 )
 
 # Global variables for threading
@@ -61,6 +61,7 @@ def main():
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Cannot open webcam", flush=True)
+        #print({"hand": "Qs, Ac", "river": "Js, Tc, Ks", "expressions": "surprise, disgust, happy"})
         return
 
     # Set buffer size to reduce latency
@@ -116,6 +117,9 @@ def main():
                 "river": ", ".join(river_cards),
                 "expressions": ", ".join(expressions)
             }
+            # Example payload:
+            # {"hand": "Qs, As", "river": "Js, Ts, Ks", "expressions": "happy, sad"}
+            #print({"hand": "Qs, Ac", "river": "Js, Tc, Ks", "expressions": "surprise, disgust, happy"})
             print(json.dumps(payload), flush=True)
             printed_payload = True
 

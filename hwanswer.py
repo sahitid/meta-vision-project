@@ -22,6 +22,25 @@ def get_homework_answer(image_url):
     Returns:
         str: The answer from the AI model
     """
+
+    #probability code
+    #dependencies: from treys: Card, Evaluator
+    hand1 = "Qs"
+    hand2 = "As"
+    board1 = "Js"
+    board2 = "Ts"
+    board3 = "Ks"
+    h1 = Card.new(hand1)
+    h2 = Card.new(hand2)
+    b1 = Card.new(board1)
+    b2 = Card.new(board2)
+    b3 = Card.new(board3)
+    board = [b1, b2, b3]  # Board cards
+    hand = [h1, h2]  # Hand cards
+    evaluator = Evaluator()
+    score = evaluator.evaluate(board, hand)  # Evaluate hand strength/rank
+    probability = evaluator.get_five_card_rank_percentage(score)  # Probability of winning
+    
     client = OpenAI(api_key=openai_api_key)  # Pass API key directly
     
     try:
